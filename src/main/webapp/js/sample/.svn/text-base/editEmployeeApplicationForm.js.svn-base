@@ -1,0 +1,71 @@
+function setAgeForAllNominees()
+{
+	if (document.editEmployeeApplForm.elements['nomineeAge'] != null && 
+		document.editEmployeeApplForm.elements['nomineeAge'].length != undefined)
+	{
+		var arrayLength = document.editEmployeeApplForm.elements['nomineeAge'].length;
+		for (i=0; i<arrayLength; i++)
+		{
+			populateAge(i);
+		}
+	}
+	else
+	{
+		populateAge(0);
+	}
+
+	document.editEmployeeApplForm.action = 'saveEmployeeApplicationForm';
+	document.editEmployeeApplForm.submit();
+	return true;
+}
+
+function populateAge(index)
+{
+	var ndob = '';
+	if (document.editEmployeeApplForm.elements['nomineeAge'] != null && 
+		document.editEmployeeApplForm.elements['nomineeAge'].length != undefined)
+	{
+		nomineeAge = document.editEmployeeApplForm.elements['nomineeAge'][index];
+		nomineeAgeDummy = document.editEmployeeApplForm.elements['nomineeAgeDummy'][index];
+		ndob = document.editEmployeeApplForm.elements['nomineeDateOfBirth'][index].value;
+	}
+	else
+	{
+		nomineeAge = document.getElementById('nomineeAge');
+		nomineeAgeDummy = document.getElementById('nomineeAgeDummy');
+		ndob = document.getElementById('nomineeDateOfBirth').value;
+	}
+	
+	var ndob_array = ndob.split('-');
+	if (ndob_array.length == 3)
+	{
+		var dd = ndob_array[0];
+		var mm = ndob_array[1];
+		var yyyy = ndob_array[2];
+		mm=mm-1;
+		var ndob_date = new Date(yyyy,mm,dd);
+		var milsecDiff=Math.abs(new Date()-ndob_date);
+		var age=parseInt(Math.abs(milsecDiff/ ( 1000 * 3600 * 24 * 365)));
+		nomineeAge.value = age;
+		nomineeAgeDummy.value = age;
+	}
+	else
+	{
+		nomineeAge.value = '';
+		nomineeAgeDummy.value = '';
+	}
+}
+
+function prePensionAcc()
+{
+	var a=document.getElementById("isPreviousOrganizationUnderDCPS");
+	if (a.value == 'N')
+	{
+		document.all.previousPensionAccountNumber.disabled=true;
+		
+	}
+	else
+	{
+		document.all.previousPensionAccountNumber.disabled=false;
+	}
+}

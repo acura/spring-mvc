@@ -1,0 +1,232 @@
+function getEmployeeChallans(strURL) 
+{
+	var year = document.getElementById('currentYear').value;
+	var month = document.getElementById('currentMonth').value;
+	
+	if (year != '' && month != '')
+	{
+		var employerChallanNumber = document.getElementById('employerChallanNumber').value;
+		var employerChallanDate = document.getElementById('employerChallanDate').value;
+		
+	    var xmlHttpReq = false;
+	    var self = this;
+	    // Mozilla/Safari
+	    if (window.XMLHttpRequest) 
+		{
+	        self.xmlHttpReq = new XMLHttpRequest();
+	    }
+	    // IE
+	    else if (window.ActiveXObject) 
+		{
+	        self.xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
+	    }
+	    self.xmlHttpReq.open('POST', strURL, true);
+	    self.xmlHttpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	    self.xmlHttpReq.onreadystatechange = function() 
+	    {
+	        if (self.xmlHttpReq.readyState == 4) 
+		    {
+	            updatepage(self.xmlHttpReq.responseText);
+	        }
+	    }
+	    		
+	    self.xmlHttpReq.send(getquerystring(employerChallanNumber, employerChallanDate, year, month));
+	}
+	else
+	{
+		document.getElementById('availableChallansNotFoundMessage').innerHTML = '';
+		clearOptions();
+	}
+	
+	return;
+}
+
+function getquerystring(employerChallanNumber, employerChallanDate, year, month) 
+{
+	// NOTE: no '?' before querystring
+    qstr = 'emplChallanNumber=' + escape(employerChallanNumber) + 
+    		'&emplChallanDate=' + employerChallanDate + 
+    		'&year=' + escape(year) + 
+    		'&month=' + escape(month);
+    return qstr;
+}
+
+function updatepage(str)
+{
+	if (str == '')
+	{
+		//alert('System could not find any matching employee challans for the selected year and month.');
+		document.getElementById('availableChallansNotFoundMessage').innerHTML = 
+				'<font color="red"><b>No Employee Challans Available For ' + 
+				document.getElementById('currentMonth').value + ' ' + 
+				document.getElementById('currentYear').value + '.</b></font>';
+		clearOptions();
+		return;
+	}
+	
+	document.getElementById('availableChallansNotFoundMessage').innerHTML = '';
+	clearOptions();
+	
+	var selectedStartIndex = str.indexOf('Selected');
+	var selectedEndIndex = str.indexOf('Selected') + 8; 
+	var availableStr = str.substring(0, selectedStartIndex);
+	var selectedStr = str.substring(selectedEndIndex, str.length);
+	
+	var availableArray=availableStr.split(":");
+	if (availableArray != null)
+	{
+		for (var i = 0; i<availableArray.length; i++)
+		{
+			if (availableArray[i] != null && availableArray[i] != '')
+			{
+				document.getElementById('availableChallans').options[i]=new Option(availableArray[i], availableArray[i], true, false);
+			}
+		}
+		sortlist('availableChallans');
+	}
+	
+	var selectedArray=selectedStr.split(":");
+	if (selectedArray != null)
+	{
+		for (var i = 0; i<selectedArray.length; i++)
+		{
+			if (selectedArray[i] != null && selectedArray[i] != '')
+			{
+				document.getElementById('selectedChallans').options[i]=new Option(selectedArray[i], selectedArray[i], true, false);
+			}
+		}
+		sortlist('selectedChallans');
+	}
+	
+	return;
+}
+
+function clearOptions()
+{
+	var optionsLength = document.getElementById('availableChallans').options.length;
+	var optionsLength1 = document.getElementById('selectedChallans').options.length;
+	
+	for (var i = 0; i<optionsLength; i++)
+	{
+		document.getElementById('availableChallans').options[i] = null;
+	}
+	document.getElementById('availableChallans').options.length = 0;
+
+
+	for (var i = 0; i<optionsLength; i++)
+	{
+		document.getElementById('selectedChallans').options[i] = null;
+	}
+	document.getElementById('selectedChallans').options.length = 0;
+}
+
+function clearOptionsByListId(listId)
+{
+	var optionsLength = document.getElementById(listId).options.length;
+	
+	for (var i = 0; i<optionsLength; i++)
+	{
+		document.getElementById(listId).options[i] = null;
+	}
+	document.getElementById(listId).options.length = 0;
+}
+
+
+function listbox_selectAllOnSave(listID, isSelect) 
+{
+	  var listbox = document.getElementById(listID);         
+
+	  for(var count=0; count < listbox.options.length; count++) 
+		 {             
+			 listbox.options[count].selected = isSelect;     
+		 } 
+}
+
+
+
+
+function listbox_selectall(listID, isSelect) 
+{
+	  var listbox = document.getElementById(listID);         
+
+	  for(var count=0; count < listbox.options.length; count++) 
+		 {             
+			 listbox.options[count].selected = isSelect;     
+		 } 
+
+	  listbox_moveacross('availableChallans', 'selectedChallans');
+}
+
+function listbox_removeall(listID, isSelect) 
+{
+	  var listbox = document.getElementById(listID);         
+
+	  for(var count=0; count < listbox.options.length; count++) 
+		      {             
+			      listbox.options[count].selected = isSelect;     
+		      } 
+
+	 listbox_moveacross('selectedChallans','availableChallans');
+}
+
+
+function sortlist(sourceID) 
+ { 
+ 	  var lb = document.getElementById(sourceID); 
+      arrTexts = new Array(); 
+	      for(i=0; i<lb.length; i++) 
+        { 
+           	arrTexts[i] = lb.options[i].text+':'+lb.options[i].value; 
+        } 
+
+          arrTexts.sort(); 
+
+      for(i=0; i<lb.length; i++) 
+         { 
+             el = arrTexts[i].split(':'); 
+             lb.options[i].text = el[0]; 
+             lb.options[i].value = el[1]; 
+        } 
+}
+
+
+	 
+function listbox_moveacross(sourceID, destID) 
+{     
+	  	var src = document.getElementById(sourceID);
+	  	var dest = document.getElementById(destID); 
+	  	for(var count=0; count < src.options.length; count++) 
+		  	{
+	  		           if(src.options[count].selected == true) 
+			  			{      
+	  		        		  	var option = src.options[count];     
+			  		            var newOption = document.createElement("option");                 
+			  		            newOption.value = option.value;                 
+			  		            newOption.text = option.text;                 
+			  		            newOption.selected = true;                 
+			  		            try 
+			  		            	{                          
+			  		            		dest.add(newOption, null); 
+			  		            		src.remove(count, null);                  
+			  		            	}
+		  		            	catch(error) 
+		  		            		{ 
+		  		            		    dest.add(newOption);                          
+		  		            		    src.remove(count);                  
+		  		            		}                 
+	  		            		count--;         
+	  		            }
+	  		 }
+	  	sortlist(sourceID);
+	  	sortlist(destID);
+}
+      
+function saveEmployeeChallan()
+{
+	
+	listbox_selectAllOnSave('availableChallans',true);
+	listbox_selectAllOnSave('selectedChallans',true);
+	document.editEmployerChallanForm.action = 'saveEmployerChallan';
+	document.editEmployerChallanForm.submit();
+}
+

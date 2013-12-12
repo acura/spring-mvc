@@ -1,0 +1,351 @@
+function xmlhttpPost(strURL, pensionAcNo, index) 
+{
+    var xmlHttpReq = false;
+    var self = this;
+    
+    if (pensionAcNo.length==4||pensionAcNo.length==12)
+    {
+    	pensionAcNo = pensionAcNo;
+    }
+    else if (pensionAcNo.length<4)
+    {
+    	pensionAcNo = String('0000'+pensionAcNo).slice(-4);	
+    }
+    else
+    {
+    	alert("Invalid Pension Account Number.");
+    }
+    // Mozilla/Safari
+    if (window.XMLHttpRequest) 
+	{
+        self.xmlHttpReq = new XMLHttpRequest();
+    }
+    // IE
+    else if (window.ActiveXObject) 
+	{
+        self.xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    self.xmlHttpReq.open('POST', strURL, true);
+    self.xmlHttpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    self.xmlHttpReq.onreadystatechange = function() 
+    {
+        if (self.xmlHttpReq.readyState == 4) 
+	    {
+            updatepage(self.xmlHttpReq.responseText, index);
+        }
+    }
+    self.xmlHttpReq.send(getquerystring(pensionAcNo));
+}
+
+function getquerystring(pensionAcNo) 
+{
+    qstr = 'pensionAcNo=' + escape(pensionAcNo);  // NOTE: no '?' before querystring
+    return qstr;
+}
+
+function updatepage(str, index)
+{
+	var pensionAccountNumber = null;
+	var employeeName = null;
+	var employeeName1 = null;
+	
+	if (document.editContributionChallanForm.elements['pensionAccountNumber'] != null && 
+		document.editContributionChallanForm.elements['pensionAccountNumber'].length != undefined)
+	{
+		pensionAccountNumber = document.editContributionChallanForm.elements['pensionAccountNumber'][index];
+		employeeName = document.editContributionChallanForm.elements['employeeName'][index];
+		employeeName1 = document.editContributionChallanForm.elements['employeeName1'][index];
+	}
+	else
+	{
+		pensionAccountNumber = document.getElementById('pensionAccountNumber');
+		employeeName = document.getElementById('employeeName');
+		employeeName1 = document.getElementById('employeeName1');
+	}
+	
+	if (str == '')
+	{
+		pensionAccountNumber.style.background = 'yellow';
+		alert('Invalid Pension Account Number.');
+		pensionAccountNumber.value = '';
+		employeeName.value = '';
+		employeeName1.value = '';
+		return;
+	}
+	var array=str.split(":");
+	pensionAccountNumber.value=array[0];
+	employeeName.value = array[1];
+	employeeName1.value = array[1];
+	pensionAccountNumber.style.background = 'white';
+	return;
+}
+
+function setTotals(obj, index)
+{
+	var objValue = obj.value;
+	
+	if (trim(objValue) != '')
+	{
+		var currentContributionField = null;
+		var previousContributionField = null;
+		var employerContributionField = null;
+		var employerContributionHidden = null;
+		
+		if (document.editContributionChallanForm.elements['employeeCurrentContribution'] != null && 
+			document.editContributionChallanForm.elements['employeeCurrentContribution'].length != undefined)
+		{
+			currentContributionField = document.editContributionChallanForm.elements['employeeCurrentContribution'][index];
+			previousContributionField = document.editContributionChallanForm.elements['employeePreviousContribution'][index];
+			employerContributionField = document.editContributionChallanForm.elements['employerContribution1'][index];
+			employerContributionHidden = document.editContributionChallanForm.elements['employerContribution'][index];
+		}
+		else
+		{
+			currentContributionField = document.getElementById('employeeCurrentContribution');
+			previousContributionField = document.getElementById('employeePreviousContribution');
+			employerContributionField = document.getElementById('employerContribution1');
+			employerContributionHidden = document.getElementById('employerContribution');
+		}
+		
+		var employeeChallanTotalField = document.getElementById('employeeChallanTotal');
+		var employerChallanTotalField = document.getElementById('employerChallanTotal');
+		
+		var employeeChallanTotalHiddenField = document.getElementById('employeeChallanTotalHidden');
+		var employerChallanTotalHiddenField = document.getElementById('employerChallanTotalHidden');
+	
+		var regex = /^\s*(\+)?((\d+(\.\d\d)?)|(\.\d\d))\s*$/;
+	
+		if (regex.test(objValue) == false)
+		{
+			obj.style.backgroundColor = 'yellow';
+			alert('Invalid Amount.');
+			obj.value = '';
+			setEmployerContribution(obj, employerContributionField, employerContributionHidden, currentContributionField, previousContributionField);
+			setChallanTotals(obj, employeeChallanTotalField, employeeChallanTotalHiddenField, employerChallanTotalField, employerChallanTotalHiddenField);
+			return;
+		}
+	
+		obj.style.backgroundColor = 'white';
+		setEmployerContribution(obj, employerContributionField, employerContributionHidden, currentContributionField, previousContributionField);
+		setChallanTotals(obj, employeeChallanTotalField, employeeChallanTotalHiddenField, employerChallanTotalField, employerChallanTotalHiddenField);
+	}
+	
+	return;
+}
+
+function setCurrentContribution(obj, index)
+{
+	validateAmountAndRound(obj);
+
+	var currentContributionField = null;
+	var basicGradePayFieldValue = null;
+	var dearnessPayFieldValue = null;
+	var dearnessAllowanceFieldValue = null;
+	
+	if (document.editContributionChallanForm.elements['employeeCurrentContribution'] != null && 
+		document.editContributionChallanForm.elements['employeeCurrentContribution'].length != undefined)
+	{
+		currentContributionField = document.editContributionChallanForm.elements['employeeCurrentContribution'][index];
+		basicGradePayFieldValue = trim(document.editContributionChallanForm.elements['basicGradePay'][index].value);
+		dearnessPayFieldValue = trim(document.editContributionChallanForm.elements['dearnessPay'][index].value);
+		dearnessAllowanceFieldValue = trim(document.editContributionChallanForm.elements['dearnessAllowance'][index].value);
+	}
+	else
+	{
+		currentContributionField = document.getElementById('employeeCurrentContribution');
+		basicGradePayFieldValue = trim(document.getElementById('basicGradePay').value);
+		dearnessPayFieldValue = trim(document.getElementById('dearnessPay').value);
+		dearnessAllowanceFieldValue = trim(document.getElementById('dearnessAllowance').value);
+	}
+	
+	if (basicGradePayFieldValue != '' && dearnessPayFieldValue != '' && dearnessAllowanceFieldValue != '')
+		currentContributionField.value = 0.10 * (parseFloat(basicGradePayFieldValue) + parseFloat(dearnessPayFieldValue) + parseFloat(dearnessAllowanceFieldValue));
+	else if (basicGradePayFieldValue != '' && dearnessPayFieldValue != '')
+		currentContributionField.value = 0.10 * (parseFloat(basicGradePayFieldValue) + parseFloat(dearnessPayFieldValue));
+	else if (basicGradePayFieldValue != '' && dearnessAllowanceFieldValue != '')
+		currentContributionField.value = 0.10 * (parseFloat(basicGradePayFieldValue) + parseFloat(dearnessAllowanceFieldValue));
+	else if (dearnessPayFieldValue != '' && dearnessAllowanceFieldValue != '')
+		currentContributionField.value = 0.10 * (parseFloat(dearnessPayFieldValue) + parseFloat(dearnessAllowanceFieldValue));
+	else if (basicGradePayFieldValue != '')
+		currentContributionField.value = 0.10 * (parseFloat(basicGradePayFieldValue));
+	else if (dearnessPayFieldValue != '')
+		currentContributionField.value = 0.10 * (parseFloat(dearnessPayFieldValue));
+	else if (dearnessAllowanceFieldValue != '')
+		currentContributionField.value = 0.10 * (parseFloat(dearnessAllowanceFieldValue));
+	else
+		currentContributionField.value = '';
+	
+	if (currentContributionField.value != '')
+		tryRound(currentContributionField);
+	
+	return;
+}
+
+function validateAmountAndRound(obj)
+{
+	var objValue = obj.value;
+	if (trim(objValue) != '')
+	{
+		var regex = /^\s*(\+)?((\d+(\.\d\d)?)|(\.\d\d))\s*$/;
+	
+		if (regex.test(objValue) == false)
+		{
+			obj.style.backgroundColor = 'yellow';
+			alert('Invalid Amount.');
+			obj.value = '';
+			return;
+		}
+		
+		tryRound(obj);
+	}
+	return;
+}
+
+function trim(value)
+{
+	return value.replace(/^\s*/, "").replace(/\s*$/, "");
+}
+
+function setChallanTotals(obj, employeeChallanTotalField, employeeChallanTotalHiddenField, employerChallanTotalField, employerChallanTotalHiddenField)
+{
+	var total = calculateTotals();
+	
+	employeeChallanTotalField.value = total;
+	employerChallanTotalField.value = total;
+	
+	employeeChallanTotalHiddenField.value = total;
+	employerChallanTotalHiddenField.value = total;
+	
+	tryRound(employeeChallanTotalField);
+	tryRound(employerChallanTotalField);
+	
+	tryRound(employeeChallanTotalHiddenField);
+	tryRound(employerChallanTotalHiddenField);
+}
+
+function calculateTotals()
+{
+	var arrayLength = 0;
+	
+	if (document.editContributionChallanForm.elements['employeeCurrentContribution'] != null && 
+		document.editContributionChallanForm.elements['employeeCurrentContribution'].length != undefined)
+	{
+		arrayLength = document.editContributionChallanForm.elements['employeeCurrentContribution'].length;
+	}
+	
+	var total = 0;
+	
+	if (arrayLength > 0)
+	{
+		for (var i = 0; i < arrayLength; i++)
+		{
+			if (trim(document.editContributionChallanForm.elements['employeeCurrentContribution'][i].value) != '' &&
+				trim(document.editContributionChallanForm.elements['employeePreviousContribution'][i].value) != '')
+			{
+				total = total + parseFloat(document.editContributionChallanForm.elements['employeeCurrentContribution'][i].value) + parseFloat(document.editContributionChallanForm.elements['employeePreviousContribution'][i].value);
+			}
+			else if (trim(document.editContributionChallanForm.elements['employeeCurrentContribution'][i].value) != '')
+			{
+				total = total + parseFloat(document.editContributionChallanForm.elements['employeeCurrentContribution'][i].value);			
+			}
+			else if (trim(document.editContributionChallanForm.elements['employeePreviousContribution'][i].value) != '')
+			{
+				total = total + parseFloat(document.editContributionChallanForm.elements['employeePreviousContribution'][i].value);			
+			}
+		}
+	}
+	else
+	{
+		if (trim(document.getElementById('employeeCurrentContribution').value) != '' &&
+			trim(document.getElementById('employeePreviousContribution').value) != '')
+		{
+			total = total + parseFloat(document.getElementById('employeeCurrentContribution').value) + parseFloat(document.getElementById('employeePreviousContribution').value);
+		}
+		else if (trim(document.getElementById('employeeCurrentContribution').value) != '')
+		{
+			total = total + parseFloat(document.getElementById('employeeCurrentContribution').value);			
+		}
+		else if (trim(document.getElementById('employeePreviousContribution').value) != '')
+		{
+			total = total + parseFloat(document.getElementById('employeePreviousContribution').value);			
+		}
+	}
+	return total;
+}
+
+function setEmployerContribution(obj, employerContributionField, employerContributionHidden, currentContributionField, previousContributionField)
+{
+	if (obj.name == 'employeeCurrentContribution' || obj.name == 'basicGradePay' || obj.name == 'dearnessPay' || obj.name == 'dearnessAllowance')
+	{
+		if (currentContributionField.value != null && trim(currentContributionField.value) != '' &&
+			previousContributionField.value != null && trim(previousContributionField.value) != '')
+		{
+			employerContributionField.value = parseFloat(currentContributionField.value) + parseFloat(previousContributionField.value);
+		}
+		else if (currentContributionField.value != null && trim(currentContributionField.value) != '')
+		{
+			employerContributionField.value = parseFloat(currentContributionField.value);
+		}
+		else if (previousContributionField.value != null && trim(previousContributionField.value) != '')
+		{
+			employerContributionField.value = parseFloat(previousContributionField.value);
+		}
+		else
+		{
+			employerContributionField.value = '';
+		}
+		employerContributionHidden.value = employerContributionField.value;
+	}
+	else if (obj.name == 'employeePreviousContribution')
+	{
+		if (obj.value != null && trim(obj.value) != '' &&
+			currentContributionField.value != null && trim(currentContributionField.value) != '')
+		{
+			employerContributionField.value = parseFloat(obj.value) + parseFloat(currentContributionField.value);
+		}
+		else if (obj.value != null && trim(obj.value) != '')
+		{
+			employerContributionField.value = parseFloat(obj.value);
+		}
+		else if (currentContributionField.value != null && trim(currentContributionField.value) != '')
+		{
+			employerContributionField.value = parseFloat(currentContributionField.value);
+		}
+		else
+		{
+			employerContributionField.value = '';
+		}
+		employerContributionHidden.value = employerContributionField.value;
+	}
+	
+	tryRound(employerContributionField);
+	tryRound(employerContributionHidden);
+}
+
+function round(n) 
+{
+	//return Math.round(n*100+((n*1000)%10>4?1:0))/100;
+	return Math.round(n);
+}
+
+/**
+ * Test harness only. Performs nice decimal padding for us.
+ */
+function tryRound(ctl) 
+{
+	var val = ctl.value;
+	val = parseFloat(val);
+	if (!isNaN(val)) 
+	{
+		var n = round(val)+"";
+		if (n.indexOf(".")==-1) 
+		{
+			n += ".00";
+		}
+		while(n.length-n.indexOf(".")<3) 
+		{
+			n += "0";
+		}
+		ctl.value = n;
+	}
+}

@@ -1,0 +1,7 @@
+function goToHomePage()
+{
+	document.forms[0].action = '/dcps-web/pages/viewHomePage.action'; 
+	document.forms[0].submit();
+	return;
+}
+

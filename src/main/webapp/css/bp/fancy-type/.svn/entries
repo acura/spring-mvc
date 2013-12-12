@@ -1,0 +1,52 @@
+8
+
+dir
+435
+https://192.168.1.101:80/svn/dcps/trunk/dcps-web/WebContent/css/bp/fancy-type
+https://192.168.1.101:80/svn/dcps
+
+
+
+2010-10-29T18:50:40.687500Z
+182
+amolg
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+ef4a332c-d6e6-ea45-9c0b-0bf126d5adf7
+
+screen.css
+file
+
+
+
+
+2011-04-19T07:24:33.218230Z
+fd9811acbfa8ce4ffc98e2d67f9e531e
+2010-10-29T18:50:40.687500Z
+182
+amolg
+
+readme.txt
+file
+
+
+
+
+2011-04-19T07:24:33.233830Z
+4e88733cdf0edfd23cc565790a70ac9f
+2010-10-10T06:21:51.140625Z
+5
+maheshs
+
